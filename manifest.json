@@ -1,10 +1,10 @@
 {
-	"id": "obsidian-sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
+	"id": "obsidian-file-tasks",
+	"name": "File Tasks",
+	"version": "0.0.1",
+	"minAppVersion": "0.0.1",
+	"description": "This is a plugin to create file based tasks. This allows for easy integration with other plugins like the DataView plugin",
+	"author": "Nick Major",
+	"authorUrl": "https://nmajor.com",
 	"isDesktopOnly": false
 }

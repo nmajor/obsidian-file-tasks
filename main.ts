@@ -2,16 +2,16 @@ import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Set
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
-	mySetting: string;
+interface FileTasksSettings {
+	taskTemplatePath: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+const FILE_TASK_DEFAULT_SETTINGS: FileTasksSettings = {
+	taskTemplatePath: 'default'
 }
 
 export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+	settings: FileTasksSettings;
 
 	async onload() {
 		await this.loadSettings();
@@ -19,7 +19,10 @@ export default class MyPlugin extends Plugin {
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
 			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+			// new Notice('This is a notice!');
+			new NewTaskModal(this.app, (result: NewTaskResult) => {
+
+			}).open();
 		});
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
@@ -32,9 +35,9 @@ export default class MyPlugin extends Plugin {
 		this.addCommand({
 			id: 'open-sample-modal-simple',
 			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
+			// callback: () => {
+			// 	new SampleModal(this.app).open();
+			// }
 		});
 		// This adds an editor command that can perform some operation on the current editor instance
 		this.addCommand({
@@ -56,7 +59,7 @@ export default class MyPlugin extends Plugin {
 					// If checking is true, we're simply "checking" if the command can be run.
 					// If checking is false, then we want to actually perform the operation.
 					if (!checking) {
-						new SampleModal(this.app).open();
+						// new SampleModal(this.app).open();
 					}
 
 					// This command will only show up in Command Palette when the check function returns true
@@ -83,22 +86,71 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign({}, FILE_TASK_DEFAULT_SETTINGS, await this.loadData());
 	}
 
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+
+	async createTask(task: NewTaskResult) {
+		const taskTemplate = await this.app.vault.read(this.settings.taskTemplatePath);
+		const taskContent = taskTemplate.replace('{{title}}', task.title).replace('{{tags}}', task.tags.join(' '));
+		const taskFile = await this.app.vault.create(task.title + '.md', taskContent);
+		await this.app.workspace.openLinkText(taskFile.path, taskFile.path);
+	}
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+interface NewTaskResult {
+	name: string;
+}
+
+class NewTaskModal extends Modal {
+	result: NewTaskResult;
+	onSubmit: (result: NewTaskResult) => void;
+
+	constructor(app: App, onSubmit: (result: NewTaskResult) => void) {
+    super(app);
+    this.onSubmit = onSubmit;
+  }
 
 	onOpen() {
 		const {contentEl} = this;
-		contentEl.setText('Woah!');
+
+		contentEl.createEl("h1", { text: "Add a Task" });
+
+    new Setting(contentEl)
+      .setName("New Task Name")
+      .addText((text) =>
+        text.onChange((value) => {
+          this.result.name = value
+        }));
+
+    new Setting(contentEl)
+      .addButton((btn) =>
+        btn
+          .setButtonText("Submit")
+          .setCta()
+          .onClick(() => {
+            this.close();
+            this.onSubmit(this.result);
+          }));
+
+		contentEl.innerHTML = `
+			<div style="width: 100%">
+				<label style="display: block;" for="new-task-name">New Task Name</label>
+				<input style="width: 100%; margin: 20px 0" type="text" name="new-task-name" id="file-tasks-input-new-task-name" />
+			</div>
+			<div style="display: flex; justify-content: end;">
+				<button id="file-tasks-button-create-task">Create Task</button>
+			</div>
+		`;
+
+		(contentEl.querySelector('#file-tasks-button-create-task') as HTMLButtonElement).addEventListener('click', () => {
+			const newTaskName = (contentEl.querySelector('#file-tasks-input-new-task-name') as HTMLInputElement)?.value;
+			console.log(newTaskName);
+			this.close();
+		})
 	}
 
 	onClose() {
@@ -127,10 +179,10 @@ class SampleSettingTab extends PluginSettingTab {
 			.setDesc('It\'s a secret')
 			.addText(text => text
 				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setValue(this.plugin.settings.taskTemplatePath)
 				.onChange(async (value) => {
 					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
+					this.plugin.settings.taskTemplatePath = value;
 					await this.plugin.saveSettings();
 				}));
 	}
