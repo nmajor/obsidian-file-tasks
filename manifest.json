@@ -1,6 +1,6 @@
 {
 	"id": "obsidian-file-tasks",
-	"name": "File Tasks",
+	"name": "FileTasks",
 	"version": "0.0.1",
 	"minAppVersion": "0.0.1",
 	"description": "This is a plugin to create file based tasks. This allows for easy integration with other plugins like the DataView plugin",

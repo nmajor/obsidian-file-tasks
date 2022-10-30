@@ -1,8 +1,7 @@
-/*
+.file-tasks-preview {
+	margin-bottom: 10px;
+}
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
+.file-tasks-error {
+	color: #f00;
+}
